@@ -42,6 +42,10 @@ noaa_gefs_read <- function(base_dir, date, cycle, sites){
     
     forecast_files <- list.files(forecast_dir, full.names = TRUE)
     
+    if(length(forecast_files) == 0){
+      stop(paste0("no files in ", forecast_dir))
+    }
+    
     nfiles <-   length(forecast_files)
     
     for(j in 1:nfiles){
