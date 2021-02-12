@@ -80,7 +80,7 @@ publish <- function(data_in = NULL,
   ## Store to output and prov to a location-based system
   files <- c(data_out, provdb)
   minio_store(files, paste0(prefix, basename(files)), 
-              bucket, "https://hash-archive.org")
+              bucket, registries)
   
  
   invisible(ids)
