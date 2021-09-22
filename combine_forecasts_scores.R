@@ -179,4 +179,81 @@ combined <- combined %>% distinct(time, siteID, forecast_start_time, team, theme
 combined_wide <- pivot_wider(combined, names_from = statistic, values_from = value)
 combined_forecast_scores <- left_join(combined_wide, combined_scores)
 
-write_csv(combined_forecast_scores, file = "/efi_neon_challenge/forecasts/combined_forecasts_scores.csv")
+aquatic_observations <- readr::read_csv("https://data.ecoforecast.org/targets/aquatics/aquatics-targets.csv.gz")
+phenology_observations <- readr::read_csv("https://data.ecoforecast.org/targets/phenology/phenology-targets.csv.gz")
+terrestrial_30m_observations <- readr::read_csv("https://data.ecoforecast.org/targets/terrestrial/terrestrial_30min-targets.csv.gz")
+terrestrial_daily_observations <- readr::read_csv("https://data.ecoforecast.org/targets/terrestrial/terrestrial_daily-targets.csv.gz")
+ticks_observations <- readr::read_csv("https://data.ecoforecast.org/targets/ticks/ticks-targets.csv.gz")
+beetles_observations <- readr::read_csv("https://data.ecoforecast.org/targets/beetles/beetles-targets.csv.gz")
+
+#Add observations
+phenology_gcc90_obs <- phenology_observations %>% 
+  select(time, siteID, gcc_90) %>% 
+  pivot_longer(cols = gcc_90, names_to = "target", values_to = "obs") %>% 
+  mutate(theme = "phenology")
+phenology_rcc90_obs <- phenology_observations %>% 
+  select(time, siteID, rcc_90) %>% 
+  pivot_longer(cols = rcc_90, names_to = "target", values_to = "obs") %>% 
+  mutate(theme = "phenology")
+aquatics_temperature_obs <- aquatic_observations %>% 
+  select(time, siteID, temperature) %>% 
+  pivot_longer(cols = temperature, names_to = "target", values_to = "obs") %>% 
+  mutate(theme = "aquatics")
+aquatics_oxygen_obs <- aquatic_observations %>% 
+  select(time, siteID, oxygen) %>% 
+  pivot_longer(cols = oxygen, names_to = "target", values_to = "obs") %>% 
+  mutate(theme = "aquatics")
+ticks_ixodes_scapularis_obs <- ticks_observations %>% 
+  mutate(siteID = plotID) %>% 
+  select(time, siteID, ixodes_scapularis) %>% 
+  pivot_longer(cols = ixodes_scapularis, names_to = "target", values_to = "obs") %>% 
+  mutate(theme = "ticks")
+ticks_amblyomma_americanum_obs <- ticks_observations %>% 
+  mutate(siteID = plotID) %>% 
+  select(time, siteID, amblyomma_americanum) %>% 
+  pivot_longer(cols = amblyomma_americanum, names_to = "target", values_to = "obs") %>% 
+  mutate(theme = "ticks")
+beetles_abundance_obs <- beetles_observations %>% 
+  select(time, siteID, abundance) %>% 
+  pivot_longer(cols = abundance, names_to = "target", values_to = "obs") %>% 
+  mutate(theme = "beetles")
+beetles_richness_obs <- beetles_observations %>% 
+  select(time, siteID, richness) %>% 
+  pivot_longer(cols = richness, names_to = "target", values_to = "obs") %>% 
+  mutate(theme = "beetles")
+terrestrrial_30m_nee_obs <- terrestrial_30m_observations %>% 
+  select(time, siteID, nee) %>% 
+  pivot_longer(cols = nee, names_to = "target", values_to = "obs") %>% 
+  mutate(theme = "terrestrial_30min")
+terrestrrial_30m_le_obs <- terrestrial_30m_observations %>% 
+  select(time, siteID, le) %>% 
+  pivot_longer(cols = le, names_to = "target", values_to = "obs") %>% 
+  mutate(theme = "terrestrial_30min")
+terrestrrial_daily_nee_obs <- terrestrial_daily_observations %>% 
+  select(time, siteID, nee) %>% 
+  pivot_longer(cols = nee, names_to = "target", values_to = "obs") %>% 
+  mutate(theme = "terrestrial_daily")
+terrestrrial_daily_le_obs <- terrestrial_daily_observations %>% 
+  select(time, siteID, le) %>% 
+  pivot_longer(cols = le, names_to = "target", values_to = "obs") %>% 
+  mutate(theme = "terrestrial_daily")
+
+
+combined_obs <- bind_rows(
+  phenology_gcc90_obs,
+  phenology_rcc90_obs,
+  aquatics_temperature_obs,
+  aquatics_oxygen_obs,
+  ticks_ixodes_scapularis_obs,
+  ticks_amblyomma_americanum_obs,
+  beetles_abundance_obs,
+  beetles_richness_obs,
+  terrestrrial_30m_nee_obs,
+  terrestrrial_30m_le_obs,
+  terrestrrial_daily_nee_obs,
+  terrestrrial_daily_le_obs
+)
+
+combined_forecast_scores_obs <- left_join(combined_forecast_scores, combined_obs)
+
+write_csv(combined_forecast_scores_obs, file = "/efi_neon_challenge/analysis/combined_forecasts_scores.csv")
