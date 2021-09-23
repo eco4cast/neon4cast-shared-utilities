@@ -256,4 +256,7 @@ combined_obs <- bind_rows(
 
 combined_forecast_scores_obs <- left_join(combined_forecast_scores, combined_obs)
 
-write_csv(combined_forecast_scores_obs, file = "/efi_neon_challenge/analysis/combined_forecasts_scores.csv")
+write_csv(combined_forecast_scores_obs, file = "~/Documents/scripts/neon4cast-shared-utilities/combined_forecasts_scores.csv.gz")
+
+aws.s3::put_object(file = "~/Documents/scripts/neon4cast-shared-utilities/combined_forecasts_scores.csv.gz",
+                   bucket = "analysis")
