@@ -107,13 +107,19 @@ combine_scores <- function(files){
   score <- NULL
   for(i in 1:length(teams_tmp)){
     curr_score <- readr::read_csv(files[i])
-    if(nrow(curr_score) > 0 & c("crps","logs") %in% names(curr_score)){
-      dates <- sort(lubridate::as_date(unique(curr_score$time)))
-      time_step <- dates[2] - dates[1]
-      first_date <- dates[1] - time_step
-      combined <- tibble(time = curr_score$time,
+    if(nrow(curr_score) > 0 & "crps" %in% names(curr_score) & "logs" %in% names(curr_score)){
+      if(stringr::str_detect(teams_tmp[[i]][2], "30min")){
+        unique_dates <- sort(lubridate::as_datetime(unique(curr_score$time)))
+        dates <- lubridate::as_datetime(curr_score$time)
+      }else{
+        unique_dates <- sort(lubridate::as_date(unique(curr_score$time)))
+        dates <- lubridate::as_date(curr_score$time)
+      }
+      time_step <- unique_dates[2] - unique_dates[1]
+      first_date <- unique_dates[1] - time_step
+      combined <- tibble(time = lubridate::as_datetime(curr_score$time),
                          siteID = curr_score$siteID,
-                         forecast_start_time = first_date,
+                         forecast_start_time = lubridate::as_date(first_date),
                          theme = curr_score$theme,
                          target = curr_score$target,
                          team = curr_score$team,
@@ -162,22 +168,59 @@ combined_amblyomma <- combine_forecasts(base_dir = '/efi_neon_challenge/forecast
 combined_beetle_abundance <- combine_forecasts(base_dir = '/efi_neon_challenge/forecasts/beetles/', target = "abundance")
 combined_beetle_richness <- combine_forecasts(base_dir = '/efi_neon_challenge/forecasts/beetles/', target = "richness")
 
+combined_ticks <- bind_rows(combined_ixodes,
+                            combined_amblyomma)
+
 combined <- bind_rows(combined_temperature,
                       combined_oxygen,
                       combined_gcc_90,
                       combined_rcc_90,
                       combined_nee,
                       combined_le,
-                      combined_ixodes,
-                      combined_amblyomma,
                       combined_beetle_abundance,
                       combined_beetle_richness)
 
 #REMOVE DUPLICATED ROWS (WHY ARE THEY THERE?)
 combined <- combined %>% distinct(time, siteID, forecast_start_time, team, theme, horizon, statistic, target, .keep_all = TRUE)
 
+combined_ticks <- combined_ticks %>% distinct(time, siteID, forecast_start_time, team, theme, horizon, statistic, target, .keep_all = TRUE)
+
 combined_wide <- pivot_wider(combined, names_from = statistic, values_from = value)
+
+combined_wide_ticks <- pivot_wider(combined_ticks, names_from = statistic, values_from = value) %>% 
+  dplyr::mutate(year = lubridate::year(time),
+                week = ifelse(lubridate::week(time) < 10, 
+                              paste0("0",lubridate::week(time)), 
+                              lubridate::week(time)),
+                week = paste0(year,"-W",week, "-","1"),
+                time =  ISOweek::ISOweek2date(week),
+                year = lubridate::year(forecast_start_time),
+                week = ifelse(lubridate::week(forecast_start_time) < 10, 
+                              paste0("0",lubridate::week(forecast_start_time)), 
+                              lubridate::week(forecast_start_time)),
+                week = paste0(year,"-W",week, "-","1"),
+                forecast_start_time =  ISOweek::ISOweek2date(week)) %>% 
+  dplyr::select(-c("year", "week"))
+
+combined_scores_ticks <- combined_scores %>% 
+  filter(target %in% c("ixodes_scapularis", "amblyomma_americanum")) %>% 
+  mutate(year = lubridate::year(time),
+         week = ifelse(lubridate::week(time) < 10, 
+                       paste0("0",lubridate::week(time)), 
+                       lubridate::week(time)),
+         week = paste0(year,"-W",week, "-","1"),
+         time =  ISOweek::ISOweek2date(week)) %>% 
+  select(-c("year","week"))
+
+combined_scores <- combined_scores %>% 
+  filter(target != "ixodes_scapularis" & target != "amblyomma_americanum")
+
+combined_wide$forecast_start_time <- lubridate::as_date(combined_wide$forecast_start_time)
+
 combined_forecast_scores <- left_join(combined_wide, combined_scores)
+
+
+combined_forecast_scores_ticks <- left_join(combined_wide_ticks, combined_scores_ticks)
 
 aquatic_observations <- readr::read_csv("https://data.ecoforecast.org/targets/aquatics/aquatics-targets.csv.gz")
 phenology_observations <- readr::read_csv("https://data.ecoforecast.org/targets/phenology/phenology-targets.csv.gz")
@@ -238,14 +281,11 @@ terrestrrial_daily_le_obs <- terrestrial_daily_observations %>%
   pivot_longer(cols = le, names_to = "target", values_to = "obs") %>% 
   mutate(theme = "terrestrial_daily")
 
-
 combined_obs <- bind_rows(
   phenology_gcc90_obs,
   phenology_rcc90_obs,
   aquatics_temperature_obs,
   aquatics_oxygen_obs,
-  ticks_ixodes_scapularis_obs,
-  ticks_amblyomma_americanum_obs,
   beetles_abundance_obs,
   beetles_richness_obs,
   terrestrrial_30m_nee_obs,
@@ -255,6 +295,33 @@ combined_obs <- bind_rows(
 )
 
 combined_forecast_scores_obs <- left_join(combined_forecast_scores, combined_obs)
+
+combined_obs_ticks <- bind_rows(ticks_ixodes_scapularis_obs,
+                                ticks_amblyomma_americanum_obs)
+
+combined_obs_ticks <- combined_obs_ticks %>% 
+  dplyr::mutate(year = lubridate::year(time),
+          week = ifelse(lubridate::week(time) < 10, 
+              paste0("0",lubridate::week(time)), 
+              lubridate::week(time)),
+          week = paste0(year,"-W",week, "-","1"),
+          time =  ISOweek::ISOweek2date(week)) %>% 
+  dplyr::select(-c("year","week"))
+
+combined_forecast_scores_obs_ticks <- left_join(combined_forecast_scores_ticks, combined_obs_ticks)
+
+combined_forecast_scores_obs_ticks <- combined_forecast_scores_obs_ticks %>% 
+  dplyr::mutate(year = lubridate::year(time),
+                week = ifelse(lubridate::week(time) < 10, 
+                              paste0("0",lubridate::week(time)), 
+                              lubridate::week(time)),
+                week = paste0(year,"-W",week, "-","1"),
+                time =  ISOweek::ISOweek2date(week)) %>% 
+  select(c("time","siteID","forecast_start_time","horizon","team","theme","target", "mean","sd","upper95",
+            "lower95","crps","logs","obs"))
+
+combined_forecast_scores_obs <- bind_rows(combined_forecast_scores_obs, 
+                                          combined_forecast_scores_obs_ticks)
 
 write_csv(combined_forecast_scores_obs, file = "~/Documents/scripts/neon4cast-shared-utilities/combined_forecasts_scores.csv.gz")
 
