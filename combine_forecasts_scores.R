@@ -189,15 +189,15 @@ combined_wide <- pivot_wider(combined, names_from = statistic, values_from = val
 
 combined_wide_ticks <- pivot_wider(combined_ticks, names_from = statistic, values_from = value) %>% 
   dplyr::mutate(year = lubridate::year(time),
-                week = ifelse(lubridate::week(time) < 10, 
-                              paste0("0",lubridate::week(time)), 
-                              lubridate::week(time)),
+                week = ifelse(ISOweek::ISOweek(time) < 10, 
+                              paste0("0",ISOweek::ISOweek(time)), 
+                              ISOweek::ISOweek(time)),
                 week = paste0(year,"-W",week, "-","1"),
                 time =  ISOweek::ISOweek2date(week),
                 year = lubridate::year(forecast_start_time),
-                week = ifelse(lubridate::week(forecast_start_time) < 10, 
-                              paste0("0",lubridate::week(forecast_start_time)), 
-                              lubridate::week(forecast_start_time)),
+                week = ifelse(ISOweek::ISOweek(forecast_start_time) < 10, 
+                              paste0("0",ISOweek::ISOweek(forecast_start_time)), 
+                              ISOweek::ISOweek(forecast_start_time)),
                 week = paste0(year,"-W",week, "-","1"),
                 forecast_start_time =  ISOweek::ISOweek2date(week)) %>% 
   dplyr::select(-c("year", "week"))
@@ -205,9 +205,9 @@ combined_wide_ticks <- pivot_wider(combined_ticks, names_from = statistic, value
 combined_scores_ticks <- combined_scores %>% 
   filter(target %in% c("ixodes_scapularis", "amblyomma_americanum")) %>% 
   mutate(year = lubridate::year(time),
-         week = ifelse(lubridate::week(time) < 10, 
-                       paste0("0",lubridate::week(time)), 
-                       lubridate::week(time)),
+         week = ifelse(lubridate::ISOweek::ISOweek(time) < 10, 
+                       paste0("0",lubridate::ISOweek::ISOweek(time)), 
+                       lubridate::ISOweek::ISOweek(time)),
          week = paste0(year,"-W",week, "-","1"),
          time =  ISOweek::ISOweek2date(week)) %>% 
   select(-c("year","week"))
@@ -301,9 +301,9 @@ combined_obs_ticks <- bind_rows(ticks_ixodes_scapularis_obs,
 
 combined_obs_ticks <- combined_obs_ticks %>% 
   dplyr::mutate(year = lubridate::year(time),
-          week = ifelse(lubridate::week(time) < 10, 
-              paste0("0",lubridate::week(time)), 
-              lubridate::week(time)),
+          week = ifelse(ISOweek::ISOweek(time) < 10, 
+              paste0("0",ISOweek::ISOweek(time)), 
+              ISOweek::ISOweek(time)),
           week = paste0(year,"-W",week, "-","1"),
           time =  ISOweek::ISOweek2date(week)) %>% 
   dplyr::select(-c("year","week"))
@@ -312,9 +312,9 @@ combined_forecast_scores_obs_ticks <- left_join(combined_forecast_scores_ticks, 
 
 combined_forecast_scores_obs_ticks <- combined_forecast_scores_obs_ticks %>% 
   dplyr::mutate(year = lubridate::year(time),
-                week = ifelse(lubridate::week(time) < 10, 
-                              paste0("0",lubridate::week(time)), 
-                              lubridate::week(time)),
+                week = ifelse(ISOweek::ISOweek(time) < 10, 
+                              paste0("0",ISOweek::ISOweek(time)), 
+                              ISOweek::ISOweek(time)),
                 week = paste0(year,"-W",week, "-","1"),
                 time =  ISOweek::ISOweek2date(week)) %>% 
   select(c("time","siteID","forecast_start_time","horizon","team","theme","target", "mean","sd","upper95",
