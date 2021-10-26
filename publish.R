@@ -51,7 +51,7 @@ publish <- function(data_in = NULL,
                     code = NULL,
                     data_out = NULL,
                     meta = NULL, 
-                    provdb = "prov.json",
+                    provdb = paste(bucket, prefix, "prov.tsv",sep="/"),
                     bucket, 
                     prefix = "",
                     registries = "https://hash-archive.org"){
@@ -60,15 +60,14 @@ publish <- function(data_in = NULL,
   
   ## get the bucket's provenance record first
   suppressMessages({
-  unlink("prov.json") # keep records distinct
+  unlink("prov.tsv") # keep records distinct
   if(aws.s3::object_exists(paste0(prefix, provdb), bucket = bucket)){
     aws.s3::save_object(paste0(prefix, provdb), bucket = bucket)
   }
   })
   
   
-  prov::write_prov(data_in, code, data_out, meta, 
-                   provdb = provdb, append = TRUE)
+  prov::write_prov_tsv(data_in, code, data_out, meta, provdb = provdb)
   
   
   files <- c(data_in,code, data_out, meta)
