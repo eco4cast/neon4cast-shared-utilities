@@ -293,9 +293,14 @@ combined_forecast_scores_obs_ticks <- combined_forecast_scores_obs_ticks %>%
             "lower95","crps","logs","obs"))
 
 combined_forecast_scores_obs <- bind_rows(combined_forecast_scores_obs, 
-                                          combined_forecast_scores_obs_ticks)
+                                          combined_forecast_scores_obs_ticks) %>% 
+  arrange(theme, team, siteID, time, forecast_start_time)
+
+
 
 write_csv(combined_forecast_scores_obs, file = "~/Documents/scripts/neon4cast-shared-utilities/combined_forecasts_scores.csv.gz")
 
 aws.s3::put_object(file = "~/Documents/scripts/neon4cast-shared-utilities/combined_forecasts_scores.csv.gz",
                    bucket = "analysis")
+
+
