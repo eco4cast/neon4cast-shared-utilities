@@ -1,12 +1,12 @@
 
 #remotes::install_github("cboettig/prov")
-library(contentid)
+#library(contentid)
 library(prov)
 library(aws.s3)
 
 ## Set the following  env vars: 
-# AWS_ACCESS_KEY_ID=""
-# AWS_SECRET_ACCESS_KEY=""
+# AWS_ACCESS_KEY_ID="<USER-HERE>"
+# AWS_SECRET_ACCESS_KEY="<SECRET-HERE>"
 # AWS_DEFAULT_REGION="data"
 # AWS_S3_ENDPOINT="ecoforecast.org"
 
@@ -51,7 +51,7 @@ publish <- function(data_in = NULL,
                     code = NULL,
                     data_out = NULL,
                     meta = NULL, 
-                    provdb = paste(bucket, prefix, "prov.tsv",sep="/"),
+                    provdb = "prov.tsv", #fs::path(bucket, prefix, "prov.tsv"),
                     bucket, 
                     prefix = "",
                     registries = "https://hash-archive.org"){
@@ -60,9 +60,8 @@ publish <- function(data_in = NULL,
   
   ## get the bucket's provenance record first
   suppressMessages({
-  unlink("prov.tsv") # keep records distinct
-  if(aws.s3::object_exists(paste0(prefix, provdb), bucket = bucket)){
-    aws.s3::save_object(paste0(prefix, provdb), bucket = bucket)
+  if(aws.s3::object_exists(provdb, bucket = "prov")){
+    aws.s3::save_object(provdb, bucket = "prov")
   }
   })
   

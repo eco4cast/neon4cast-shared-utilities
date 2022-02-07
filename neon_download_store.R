@@ -1,4 +1,5 @@
 library(neonstore)
+library(readr)
 
 Sys.setenv("NEONSTORE_HOME" = "/efi_neon_challenge/neonstore")
 Sys.setenv("NEONSTORE_DB" = "/efi_neon_challenge/neonstore")
@@ -7,17 +8,19 @@ Sys.setenv("duckdb_restart"="TRUE")
 
 ## Terrestrial
 #DP4.00200.001 & DP1.00094.001
-sites <- c("BART", "KONZ", "SRER", "OSBS")
+site_table <- read_csv("https://raw.githubusercontent.com/eco4cast/neon4cast-terrestrial/master/Terrestrial_NEON_Field_Site_Metadata_20210928.csv")
+sites <- site_table$field_site_id
 
 print("Downloading: DP4.00200.001")
 neonstore::neon_download(product = "DP4.00200.001", site = sites, type = "basic")
 neon_store(product = "DP4.00200.001") 
-print("Downloading: DP1.00094.001")
-x <- neonstore::neon_download(product = "DP1.00094.001", site = sites, type = "basic")
-neon_store(table = "SWS_30_minute", n = 50) 
+#print("Downloading: DP1.00094.001")
+#x <- neonstore::neon_download(product = "DP1.00094.001", site = sites, type = "basic")
+#neon_store(table = "SWS_30_minute", n = 50) 
 
 ## Aquatics
-sites <- c("BARC", "POSE")
+site_table <- read_csv("https://raw.githubusercontent.com/eco4cast/neon4cast-aquatics/master/Aquatic_NEON_Field_Site_Metadata_20210928.csv")
+sites <- site_table$field_site_id
 
 message("Downloading: DP1.20288.001")
 neonstore::neon_download("DP1.20288.001",site = sites, type = "basic")
@@ -57,6 +60,6 @@ neon_download(product = "DP4.00001.001", # Summary weather statistics
               start_date = NA,
               end_date = "2019-12-31",   # end date for training data
               site = target.sites,       # target sites defined from 00_Target_Species_EDA.Rmd
-              type = "basic")    
-
+              type = "basic")
+neon_store(product = "DP4.00001.001")
 
